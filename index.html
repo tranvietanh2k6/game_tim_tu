@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm Từ Bí Ẩn - Y khoa</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a535c, #4ecdc4);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            max-width: 1400px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            height: 90vh;
+        }
+        
+        .left-panel {
+            flex: 0.4;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        
+        .right-panel {
+            flex: 0.6;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f7fff7;
+            border-left: 2px dashed #4ecdc4;
+        }
+        
+        h1 {
+            color: #1a535c;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background-color: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #6e8efb;
+        }
+        
+        .current-word {
+            background-color: #ffe66d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 2px dashed #ff6b6b;
+        }
+        
+        .hint-section {
+            background-color: #f9f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px dashed #a777e3;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .hint-title {
+            font-weight: bold;
+            color: #6e8efb;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .hints {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .hint-item {
+            padding: 10px 15px;
+            background-color: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+        
+        .hint-item.found {
+            background-color: #e6f7e9;
+            border-color: #4CAF50;
+            text-decoration: line-through;
+            color: #2e7d32;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);
+            gap: 3px;
+            margin: 0 auto 25px;
+            background-color: #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 700px;
+        }
+        
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            font-weight: bold;
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            min-height: 40px;
+        }
+        
+        .cell:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.05);
+        }
+        
+        .cell.selected {
+            background-color: #b3e5fc;
+        }
+        
+        .cell.found {
+            background-color: #a5d6a7;
+            color: #1b5e20;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+            flex: 1;
+            max-width: 220px;
+        }
+        
+        #checkBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        #checkBtn:hover {
+            background-color: #388E3C;
+            transform: translateY(-2px);
+        }
+        
+        #nextBtn {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        #nextBtn:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+        }
+        
+        #nextBtn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            width: 100%;
+        }
+        
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4CAF50;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+        
+        .level-indicator {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            color: #1a535c;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            background-color: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-left: 5px solid #6e8efb;
+        }
+        
+        .completion-message {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a535c;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .right-panel {
+                border-left: none;
+                border-top: 2px dashed #4ecdc4;
+            }
+            
+            .game-board {
+                grid-template-columns: repeat(14, 1fr);
+                gap: 2px;
+                padding: 10px;
+            }
+            
+            .cell {
+                font-size: 1.4rem;
+                min-height: 35px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(14, 1fr);
+                gap: 1px;
+                padding: 5px;
+            }
+            
+            .cell {
+                font-size: 1.2rem;
+                min-height: 30px;
+            }
+            
+            .hints {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>Tìm Từ Bí Ẩn - Y khoa</h1>
+            <p class="subtitle">Tìm từ tiếng Anh ẩn trong bảng dựa trên gợi ý nghĩa tiếng Việt</p>
+            
+            <div class="instructions">
+                <p><strong>Hướng dẫn:</strong> Chọn các ô liên tiếp theo hàng ngang, dọc hoặc chéo để tạo thành từ tiếng Anh tương ứng với gợi ý. Nhấp vào ô đã chọn để bỏ chọn. Sau khi chọn, nhấn "Kiểm tra" để xác nhận.</p>
+            </div>
+            
+            <div class="game-info">
+                <div class="level-indicator">Từ: <span id="currentWordIndex">1</span>/12</div>
+                <div class="score">Đã hoàn thành: <span id="foundCount">0</span>/12</div>
+            </div>
+            
+            <div class="current-word">
+                <span id="currentWordHint">Từ hiện tại: </span>
+            </div>
+            
+            <div class="hint-section">
+                <div class="hint-title">Tất cả các từ cần tìm:</div>
+                <div class="hints" id="hintsContainer">
+                    <!-- Các gợi ý sẽ được thêm bằng JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="game-board" id="gameBoard">
+                <!-- Bảng chữ cái sẽ được tạo bằng JavaScript -->
+            </div>
+            
+            <div class="controls">
+                <button id="checkBtn">Kiểm tra từ đã chọn</button>
+                <button id="nextBtn" disabled>Từ tiếp theo</button>
+            </div>
+            
+            <div class="message" id="message"></div>
+            <div class="completion-message" id="completionMessage">Chúc mừng! Bạn đã hoàn thành tất cả các từ!</div>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu từ vựng và nghĩa (12 từ y khoa)
+        const wordData = [
+            { word: "ONCOLOGICAL", meaning: "(adj) thuộc khoa ung thư", found: false },
+            { word: "DIAGNOSIS", meaning: "(n) sự chẩn đoán", found: false },
+            { word: "CONTINGENTUPON", meaning: "(adj) phụ thuộc vào", found: false },
+            { word: "DELVE", meaning: "(v) đi sâu vào", found: false },
+            { word: "MALIGNANT", meaning: "(adj) ác tính", found: false },
+            { word: "TUMORTISSUE", meaning: "(n) mô khối u", found: false },
+            { word: "SQUAMOUS", meaning: "(adj) có vảy (ung thư tế bào vảy)", found: false },
+            { word: "EPITHELIAL", meaning: "(adj) thuộc biểu mô (ung thư biểu mô)", found: false },
+            { word: "PROGNOSIS", meaning: "(n) sự tiên lượng", found: false },
+            { word: "MUTATION", meaning: "(n) sự đột biến", found: false },
+            { word: "EVIDENCE", meaning: "(n) bằng chứng", found: false },
+            { word: "SCRUPULOUS", meaning: "(adj) tỉ mỉ, cẩn trọng", found: false }
+        ];
+
+        // Cấu hình game
+        const config = {
+            boardSize: 14,
+            currentWordIndex: 0,
+            selectedCells: [],
+            foundWords: 0,
+            currentWordPositions: [],
+            selectionDirection: null // 'horizontal', 'vertical', 'diagonal'
+        };
+
+        // Khởi tạo game
+        function initGame() {
+            createHints();
+            setupEventListeners();
+            loadWord(0);
+        }
+
+        // Tạo danh sách gợi ý với một số ký tự bị ẩn
+        function createHints() {
+            const hintsContainer = document.getElementById('hintsContainer');
+            hintsContainer.innerHTML = '';
+            
+            wordData.forEach((item, index) => {
+                const hintElement = document.createElement('div');
+                hintElement.className = `hint-item ${item.found ? 'found' : ''}`;
+                
+                // Tạo phiên bản từ với một số ký tự bị ẩn
+                const hiddenWord = hideSomeLetters(item.word);
+                hintElement.textContent = `${index + 1}. ${hiddenWord} - ${item.meaning}`;
+                hintElement.dataset.word = item.word;
+                
+                hintsContainer.appendChild(hintElement);
+            });
+        }
+
+        // Ẩn một số ký tự trong từ (thay bằng dấu gạch dưới)
+        function hideSomeLetters(word) {
+            // Giữ lại ít nhất 2 ký tự đầu và 2 ký tự cuối
+            const keepStart = 2;
+            const keepEnd = 2;
+            
+            // Nếu từ quá ngắn, không ẩn ký tự nào
+            if (word.length <= keepStart + keepEnd) {
+                return word;
+            }
+            
+            // Số ký tự có thể ẩn
+            const canHide = word.length - keepStart - keepEnd;
+            // Ẩn khoảng 40-60% số ký tự có thể ẩn
+            const hideCount = Math.max(1, Math.floor(canHide * (0.4 + Math.random() * 0.2)));
+            
+            // Tạo mảng ký tự
+            let chars = word.split('');
+            
+            // Tạo danh sách các vị trí có thể ẩn (không phải ký tự đầu và cuối)
+            let possiblePositions = [];
+            for (let i = keepStart; i < word.length - keepEnd; i++) {
+                possiblePositions.push(i);
+            }
+            
+            // Xáo trộn danh sách vị trí
+            for (let i = possiblePositions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [possiblePositions[i], possiblePositions[j]] = [possiblePositions[j], possiblePositions[i]];
+            }
+            
+            // Ẩn các ký tự ở các vị trí đã chọn
+            for (let i = 0; i < hideCount && i < possiblePositions.length; i++) {
+                chars[possiblePositions[i]] = '_';
+            }
+            
+            return chars.join('');
+        }
+
+        // Tải từ mới
+        function loadWord(index) {
+            if (index >= wordData.length) {
+                showCompletionMessage();
+                return;
+            }
+            
+            config.currentWordIndex = index;
+            config.selectedCells = [];
+            config.currentWordPositions = [];
+            config.selectionDirection = null;
+            
+            const currentWord = wordData[index];
+            document.getElementById('currentWordIndex').textContent = index + 1;
+            document.getElementById('currentWordHint').textContent = `Từ hiện tại: ${currentWord.meaning}`;
+            
+            createBoard();
+            placeWordOnBoard(currentWord.word);
+            updateUI();
+            
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        // Tạo bảng chữ cái
+        function createBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            gameBoard.style.gridTemplateColumns = `repeat(${config.boardSize}, 1fr)`;
+            
+            // Tạo bảng với chữ cái ngẫu nhiên
+            for (let i = 0; i < config.boardSize * config.boardSize; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = getRandomLetter();
+                cell.dataset.index = i;
+                
+                cell.addEventListener('click', () => {
+                    handleCellClick(cell);
+                });
+                
+                gameBoard.appendChild(cell);
+            }
+        }
+
+        // Lấy chữ cái ngẫu nhiên
+        function getRandomLetter() {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            return alphabet[Math.floor(Math.random() * alphabet.length)];
+        }
+
+        // Đặt từ vào bảng
+        function placeWordOnBoard(word) {
+            // Chọn hướng ngẫu nhiên: 0 = ngang, 1 = dọc, 2 = chéo
+            const direction = Math.floor(Math.random() * 3);
+            let row, col;
+            
+            // Xác định vị trí bắt đầu sao cho từ vừa với bảng
+            switch(direction) {
+                case 0: // ngang
+                    row = Math.floor(Math.random() * config.boardSize);
+                    col = Math.floor(Math.random() * (config.boardSize - word.length));
+                    break;
+                case 1: // dọc
+                    row = Math.floor(Math.random() * (config.boardSize - word.length));
+                    col = Math.floor(Math.random() * config.boardSize);
+                    break;
+                case 2: // chéo
+                    row = Math.floor(Math.random() * (config.boardSize - word.length));
+                    col = Math.floor(Math.random() * (config.boardSize - word.length));
+                    break;
+            }
+            
+            // Đặt từ vào bảng
+            for (let i = 0; i < word.length; i++) {
+                let index;
+                switch(direction) {
+                    case 0: // ngang
+                        index = row * config.boardSize + (col + i);
+                        break;
+                    case 1: // dọc
+                        index = (row + i) * config.boardSize + col;
+                        break;
+                    case 2: // chéo
+                        index = (row + i) * config.boardSize + (col + i);
+                        break;
+                }
+                
+                const cell = document.querySelector(`.cell[data-index="${index}"]`);
+                if (cell) {
+                    cell.textContent = word[i];
+                    cell.dataset.isPartOfWord = true;
+                    cell.dataset.word = word;
+                    
+                    // Lưu vị trí của từ
+                    config.currentWordPositions.push(index);
+                }
+            }
+        }
+
+        // Xử lý khi nhấp vào ô
+        function handleCellClick(cell) {
+            const index = parseInt(cell.dataset.index);
+            
+            // Nếu ô đã được tìm thấy, không làm gì
+            if (cell.classList.contains('found')) {
+                return;
+            }
+            
+            // Nếu ô đã được chọn, bỏ chọn nó
+            if (config.selectedCells.includes(index)) {
+                // Tìm vị trí của ô trong mảng selectedCells
+                const pos = config.selectedCells.indexOf(index);
+                
+                // Nếu đây là ô cuối cùng, chỉ cần xóa nó
+                if (pos === config.selectedCells.length - 1) {
+                    config.selectedCells.pop();
+                    cell.classList.remove('selected');
+                    
+                    // Nếu không còn ô nào được chọn, đặt lại hướng
+                    if (config.selectedCells.length === 0) {
+                        config.selectionDirection = null;
+                    }
+                } 
+                // Nếu không phải ô cuối cùng, xóa tất cả các ô từ vị trí này trở đi
+                else {
+                    // Xóa tất cả các ô từ vị trí này trở đi
+                    for (let i = config.selectedCells.length - 1; i >= pos; i--) {
+                        const idx = config.selectedCells[i];
+                        const c = document.querySelector(`.cell[data-index="${idx}"]`);
+                        if (c) {
+                            c.classList.remove('selected');
+                        }
+                    }
+                    config.selectedCells.splice(pos);
+                    
+                    // Nếu không còn ô nào được chọn, đặt lại hướng
+                    if (config.selectedCells.length === 0) {
+                        config.selectionDirection = null;
+                    }
+                }
+                
+                return;
+            }
+            
+            // Nếu đây là ô đầu tiên được chọn
+            if (config.selectedCells.length === 0) {
+                config.selectedCells.push(index);
+                cell.classList.add('selected');
+                return;
+            }
+            
+            // Kiểm tra xem ô này có thể được chọn (phải thẳng hàng với các ô đã chọn)
+            const lastIndex = config.selectedCells[config.selectedCells.length - 1];
+            const isValid = isValidSelection(lastIndex, index);
+            
+            if (isValid) {
+                config.selectedCells.push(index);
+                cell.classList.add('selected');
+            } else {
+                showMessage("Các ô phải được chọn theo hàng ngang, dọc hoặc chéo!", 'error');
+            }
+        }
+
+        // Kiểm tra xem ô được chọn có hợp lệ không
+        function isValidSelection(lastIndex, newIndex) {
+            const lastRow = Math.floor(lastIndex / config.boardSize);
+            const lastCol = lastIndex % config.boardSize;
+            const newRow = Math.floor(newIndex / config.boardSize);
+            const newCol = newIndex % config.boardSize;
+            
+            // Nếu đây là ô thứ hai được chọn, xác định hướng
+            if (config.selectedCells.length === 1) {
+                const rowDiff = newRow - lastRow;
+                const colDiff = newCol - lastCol;
+                
+                // Chỉ cho phép chọn theo hàng ngang, dọc hoặc chéo
+                if ((rowDiff === 0 && Math.abs(colDiff) === 1) || // ngang
+                    (colDiff === 0 && Math.abs(rowDiff) === 1) || // dọc
+                    (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 1)) { // chéo
+                    
+                    // Lưu hướng chọn
+                    config.selectionDirection = {
+                        row: rowDiff,
+                        col: colDiff
+                    };
+                    return true;
+                }
+                return false;
+            }
+            
+            // Kiểm tra các ô tiếp theo phải theo đúng hướng đã xác định
+            const expectedRow = lastRow + config.selectionDirection.row;
+            const expectedCol = lastCol + config.selectionDirection.col;
+            
+            return newRow === expectedRow && newCol === expectedCol;
+        }
+
+        // Kiểm tra từ đã chọn
+        function checkSelectedWord() {
+            if (config.selectedCells.length === 0) {
+                showMessage("Vui lòng chọn ít nhất một ô!", 'error');
+                return;
+            }
+            
+            // Lấy chữ cái từ các ô đã chọn
+            let selectedWord = '';
+            config.selectedCells.forEach(index => {
+                const cell = document.querySelector(`.cell[data-index="${index}"]`);
+                selectedWord += cell.textContent;
+            });
+            
+            // Kiểm tra xem từ đã chọn có khớp với từ hiện tại không
+            const currentWord = wordData[config.currentWordIndex].word;
+            
+            if (selectedWord === currentWord) {
+                // Đánh dấu từ đã tìm thấy
+                wordData[config.currentWordIndex].found = true;
+                config.foundWords++;
+                
+                // Đánh dấu các ô đã chọn là đã tìm thấy
+                config.selectedCells.forEach(index => {
+                    const cell = document.querySelector(`.cell[data-index="${index}"]`);
+                    cell.classList.remove('selected');
+                    cell.classList.add('found');
+                });
+                
+                config.selectedCells = [];
+                
+                showMessage(`Chúc mừng! Bạn đã tìm thấy từ "${currentWord}"`, 'success');
+                updateUI();
+                
+                // Kích hoạt nút "Từ tiếp theo"
+                document.getElementById('nextBtn').disabled = false;
+                
+                // Nếu đã tìm thấy tất cả các từ, hiển thị thông báo hoàn thành
+                if (config.foundWords === wordData.length) {
+                    showCompletionMessage();
+                }
+            } else {
+                showMessage(`"${selectedWord}" không phải là từ đúng. Hãy thử lại!`, 'error');
+                
+                // Bỏ chọn tất cả các ô
+                config.selectedCells.forEach(index => {
+                    const cell = document.querySelector(`.cell[data-index="${index}"]`);
+                    cell.classList.remove('selected');
+                });
+                
+                config.selectedCells = [];
+                config.selectionDirection = null;
+            }
+        }
+
+        // Chuyển sang từ tiếp theo
+        function nextWord() {
+            if (config.currentWordIndex < wordData.length - 1) {
+                loadWord(config.currentWordIndex + 1);
+                showMessage(`Đã chuyển sang từ tiếp theo!`, 'success');
+            } else {
+                showCompletionMessage();
+            }
+        }
+
+        // Hiển thị thông báo hoàn thành
+        function showCompletionMessage() {
+            document.getElementById('completionMessage').style.display = 'block';
+            document.getElementById('nextBtn').disabled = true;
+            showMessage("Chúc mừng! Bạn đã hoàn thành tất cả các từ!", 'success');
+        }
+
+        // Cập nhật giao diện
+        function updateUI() {
+            document.getElementById('foundCount').textContent = config.foundWords;
+            
+            // Cập nhật trạng thái gợi ý
+            const hintItems = document.querySelectorAll('.hint-item');
+            hintItems.forEach((item, index) => {
+                if (wordData[index].found) {
+                    item.classList.add('found');
+                } else {
+                    item.classList.remove('found');
+                }
+            });
+        }
+
+        // Hiển thị thông báo
+        function showMessage(text, type) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = text;
+            messageElement.className = `message ${type}`;
+            messageElement.style.display = 'block';
+            
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Thiết lập sự kiện
+        function setupEventListeners() {
+            document.getElementById('checkBtn').addEventListener('click', checkSelectedWord);
+            document.getElementById('nextBtn').addEventListener('click', nextWord);
+        }
+
+        // Khởi chạy game khi trang tải xong
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
